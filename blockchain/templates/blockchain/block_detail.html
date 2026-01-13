@@ -1,0 +1,255 @@
+<!-- blockchain/templates/blockchain/block_detail.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block #{{ index }} - Blockchain Demo</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem 1.5rem;
+            font-weight: bold;
+        }
+        .block-hash {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            background-color: #ecf0f1;
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'blockchain:home' %}">
+                <i class="fas fa-cubes me-2"></i>Blockchain Demo
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{% url 'blockchain:home' %}">
+                    <i class="fas fa-home me-1"></i>Home
+                </a>
+                <a class="nav-link" href="{% url 'blockchain:wallet_list' %}">
+                    <i class="fas fa-wallet me-1"></i>Wallets
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mt-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-5 text-center mb-4">
+                    <i class="fas fa-cube text-primary"></i>
+                    {% if is_genesis %}
+                        Genesis Block
+                    {% else %}
+                        Block #{{ index }}
+                    {% endif %}
+                </h1>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="btn-group w-100" role="group">
+                    {% if prev_block is not None %}
+                        <a href="{% url 'blockchain:block_detail' prev_block %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Previous Block
+                        </a>
+                    {% else %}
+                        <button class="btn btn-outline-secondary" disabled>
+                            <i class="fas fa-arrow-left me-2"></i>Previous Block
+                        </button>
+                    {% endif %}
+
+                    <a href="{% url 'blockchain:home' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-home me-2"></i>Blockchain
+                    </a>
+
+                    {% if next_block is not None %}
+                        <a href="{% url 'blockchain:block_detail' next_block %}" class="btn btn-outline-primary">
+                            Next Block<i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                    {% else %}
+                        <button class="btn btn-outline-secondary" disabled>
+                            Next Block<i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Block Information -->
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle me-2"></i>Block Information
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong><i class="fas fa-hashtag me-2 text-primary"></i>Index:</strong></td>
+                                <td>{{ index }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong><i class="fas fa-clock me-2 text-info"></i>Timestamp:</strong></td>
+                                <td>{{ block.timestamp|floatformat:0 }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong><i class="fas fa-calculator me-2 text-warning"></i>Nonce:</strong></td>
+                                <td><span class="badge bg-warning text-dark">{{ block.nonce }}</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong><i class="fas fa-exchange-alt me-2 text-success"></i>Transactions:</strong></td>
+                                <td><span class="badge bg-success">{{ block.transactions|length }}</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-fingerprint me-2"></i>Hash Information
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Block Hash:</strong></label>
+                            <div class="block-hash">{{ block.hash }}</div>
+                        </div>
+
+                        {% if not is_genesis %}
+                            <div class="mb-0">
+                                <label class="form-label"><strong>Previous Hash:</strong></label>
+                                <div class="block-hash">{{ block.previous_hash }}</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-list me-2"></i>Transactions
+                        <span class="badge bg-light text-dark float-end">{{ block.transactions|length }}</span>
+                    </div>
+                    <div class="card-body">
+                        {% if block.transactions %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>From</th>
+                                            <th>To</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for tx in block.transactions %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>
+                                                    {% if tx.from %}
+                                                        <span class="text-muted" style="font-size: 0.85rem;">
+                                                            {{ tx.from|slice:":20" }}...
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-award me-1"></i>Mining Reward
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <span class="text-muted" style="font-size: 0.85rem;">
+                                                        {{ tx.to|slice:":20" }}...
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <strong class="text-success">{{ tx.amount|floatformat:2 }} coins</strong>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No transactions in this block.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raw JSON -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-code me-2"></i>Raw Block Data
+                    </div>
+                    <div class="card-body">
+                        <pre style="background: #2c3e50; color: #ecf0f1; padding: 1rem; border-radius: 8px; max-height: 400px; overflow-y: auto;"><code>{
+    "index": {{ index }},
+    "timestamp": {{ block.timestamp }},
+    "nonce": {{ block.nonce }},
+    "hash": "{{ block.hash }}",
+    "previous_hash": "{{ block.previous_hash }}",
+    "transactions": [
+        {% for tx in block.transactions %}
+        {
+            "from": {% if tx.from %}"{{ tx.from }}"{% else %}null{% endif %},
+            "to": "{{ tx.to }}",
+            "amount": {{ tx.amount }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ]
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

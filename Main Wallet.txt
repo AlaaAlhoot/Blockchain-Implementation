@@ -1,0 +1,5 @@
+=== WALLET 1 - Main Wallet ===
+Label: Main Wallet
+Public Key:a3185d9cd8f78390a48bbe0522c7faeec9851646f22c5aee7945e9553b2f938788c8229872d58c9558984b152e85c6495bb1ba828ae109d5746769d42d92fec4
+Private Key:a730a611b85beec62fa87332a1227d6f7f0eeba7e1500408ab099c42b23178f7
+Balance: 0 coins

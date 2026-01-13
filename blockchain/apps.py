@@ -1,0 +1,14 @@
+
+from django.apps import AppConfig
+
+
+class BlockchainConfig(AppConfig):
+
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'blockchain'
+    verbose_name = 'Blockchain Management'
+
+    def ready(self):
+
+        # Import signals if needed in future
+        pass

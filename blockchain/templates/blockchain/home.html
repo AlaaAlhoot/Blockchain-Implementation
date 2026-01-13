@@ -1,0 +1,187 @@
+
+{% extends 'blockchain/base.html' %}
+
+{% block title %}Blockchain - Home{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-4 text-center mb-4">
+            <i class="fas fa-cubes text-primary"></i>
+            Blockchain Explorer
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <i class="fas fa-cube text-primary"></i>
+            <h3>{{ total_blocks }}</h3>
+            <p>Total Blocks</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <i class="fas fa-clock text-warning"></i>
+            <h3>{{ pending_count }}</h3>
+            <p>Pending Transactions</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <i class="fas fa-hard-hat text-info"></i>
+            <h3>{{ difficulty }}</h3>
+            <p>Mining Difficulty</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card {% if is_valid %}text-success{% else %}text-danger{% endif %}">
+            <i class="fas {% if is_valid %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+            <h3>{% if is_valid %}Valid{% else %}Invalid{% endif %}</h3>
+            <p>Blockchain Status</p>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <a href="{% url 'blockchain:validate_chain' %}" class="btn btn-success btn-lg me-2">
+            <i class="fas fa-check-double me-2"></i>Validate Chain
+        </a>
+        <a href="{% url 'blockchain:transaction_pending' %}" class="btn btn-warning btn-lg me-2">
+            <i class="fas fa-clock me-2"></i>View Pending ({{ pending_count }})
+        </a>
+        <form method="post" action="{% url 'blockchain:reset_blockchain' %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-lg" onclick="return confirm('Are you sure you want to reset the blockchain? This cannot be undone!')">
+                <i class="fas fa-redo me-2"></i>Reset Blockchain
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Blockchain Display -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-link me-2"></i>Blockchain
+            </div>
+            <div class="card-body">
+                {% if chain %}
+                    {% for block in chain %}
+                        <div class="card mb-3 {% if forloop.first %}border-warning{% endif %}">
+                            <div class="card-header bg-light">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h5 class="mb-0">
+                                            {% if forloop.first %}
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-crown me-1"></i>Genesis Block
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-primary">
+                                                    Block #{{ forloop.counter0 }}
+                                                </span>
+                                            {% endif %}
+                                        </h5>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ block.timestamp|date:"Y-m-d H:i:s" }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12 mb-2">
+                                        <strong><i class="fas fa-fingerprint me-2 text-primary"></i>Hash:</strong>
+                                        <span class="block-hash">{{ block.hash }}</span>
+                                        <button class="btn btn-sm btn-link copy-btn" onclick="copyToClipboard('{{ block.hash }}', this)">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                    {% if not forloop.first %}
+                                        <div class="col-md-12 mb-2">
+                                            <strong><i class="fas fa-link me-2 text-secondary"></i>Previous Hash:</strong>
+                                            <span class="block-hash">{{ block.previous_hash }}</span>
+                                        </div>
+                                    {% endif %}
+                                    <div class="col-md-6 mb-2">
+                                        <strong><i class="fas fa-hashtag me-2 text-info"></i>Nonce:</strong>
+                                        <span class="badge bg-info">{{ block.nonce }}</span>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <strong><i class="fas fa-exchange-alt me-2 text-success"></i>Transactions:</strong>
+                                        <span class="badge bg-success">{{ block.transactions|length }}</span>
+                                    </div>
+                                </div>
+
+                                {% if block.transactions %}
+                                    <hr>
+                                    <h6 class="mb-3"><i class="fas fa-list me-2"></i>Transactions:</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>From</th>
+                                                    <th>To</th>
+                                                    <th>Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for tx in block.transactions %}
+                                                    <tr>
+                                                        <td>
+                                                            {% if tx.from %}
+                                                                <span class="text-muted" style="font-size: 0.85rem;">
+                                                                    {{ tx.from|truncatechars:20 }}
+                                                                </span>
+                                                            {% else %}
+                                                                <span class="badge bg-warning text-dark">
+                                                                    <i class="fas fa-award me-1"></i>Mining Reward
+                                                                </span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            <span class="text-muted" style="font-size: 0.85rem;">
+                                                                {{ tx.to|truncatechars:20 }}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <strong class="text-success">{{ tx.amount }} coins</strong>
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-info-circle me-2"></i>No transactions in this block
+                                    </p>
+                                {% endif %}
+
+                                <div class="text-end mt-3">
+                                    <a href="{% url 'blockchain:block_detail' forloop.counter0 %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i>View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-center text-muted">
+                        <i class="fas fa-info-circle me-2"></i>No blocks in the blockchain yet.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

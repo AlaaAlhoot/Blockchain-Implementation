@@ -1,0 +1,144 @@
+
+{% extends 'blockchain/base.html' %}
+
+{% block title %}Check Balance{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5 text-center mb-4">
+            <i class="fas fa-search-dollar text-success"></i>
+            Check Wallet Balance
+        </h1>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Search Form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-search me-2"></i>Enter Wallet Address
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ form.address.label_tag }}
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                            <div class="text-danger">{{ form.address.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            Tip: Copy the address from your <a href="{% url 'blockchain:wallet_list' %}">wallets page</a>
+                        </small>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search me-2"></i>Check Balance
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Balance Result -->
+        {% if balance is not None %}
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-wallet me-2"></i>Balance Information
+                </div>
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-3">Wallet Address:</h6>
+                    <div class="block-hash mb-4">{{ address }}</div>
+
+                    <div class="alert alert-success">
+                        <h1 class="display-3 mb-0">
+                            <i class="fas fa-coins me-2"></i>{{ balance|floatformat:2 }}
+                        </h1>
+                        <p class="mb-0 mt-2">coins</p>
+                    </div>
+
+                    <a href="{% url 'blockchain:address_detail' address %}" class="btn btn-outline-primary">
+                        <i class="fas fa-history me-2"></i>View Transaction History
+                    </a>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            {% if transactions %}
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-history me-2"></i>Transaction History
+                        <span class="badge bg-primary float-end">{{ transactions|length }}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>From</th>
+                                        <th>To</th>
+                                        <th>Amount</th>
+                                        <th>Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tx in transactions %}
+                                        <tr>
+                                            <td>
+                                                {% if tx.from == address %}
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-arrow-up me-1"></i>Sent
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-arrow-down me-1"></i>Received
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if tx.from %}
+                                                    <span class="text-muted" style="font-size: 0.85rem;">
+                                                        {{ tx.from|truncatechars:15 }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="fas fa-award"></i> Mining
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="text-muted" style="font-size: 0.85rem;">
+                                                    {{ tx.to|truncatechars:15 }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <strong class="{% if tx.from == address %}text-danger{% else %}text-success{% endif %}">
+                                                    {% if tx.from == address %}-{% else %}+{% endif %}{{ tx.amount|floatformat:2 }}
+                                                </strong>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    {{ tx.timestamp|date:"Y-m-d H:i" }}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No transactions found for this address.
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

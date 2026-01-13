@@ -1,0 +1,173 @@
+
+{% extends 'blockchain/base.html' %}
+
+{% block title %}Create Transaction{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5 text-center mb-4">
+            <i class="fas fa-paper-plane text-primary"></i>
+            Create New Transaction
+        </h1>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-edit me-2"></i>Transaction Details
+            </div>
+            <div class="card-body">
+                {% if wallets %}
+                    <form method="post" id="transactionForm">
+                        {% csrf_token %}
+
+                        <!-- Select Wallet -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong><i class="fas fa-wallet me-2"></i>Select Your Wallet:</strong>
+                            </label>
+                            <select class="form-select" id="walletSelect" onchange="updateWalletInfo()">
+                                <option value="">-- Choose a wallet --</option>
+                                {% for wallet in wallets %}
+                                    <option value="{{ wallet.public_key }}"
+                                            data-private="{{ wallet.private_key }}"
+                                            data-balance="{{ wallet.balance }}"
+                                            {% if wallet.public_key == form.from_address.value %}selected{% endif %}>
+                                        {{ wallet.label }} (Balance: {{ wallet.balance|floatformat:2 }} coins)
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Wallet Balance Display -->
+                        <div class="alert alert-info" id="balanceAlert" style="display: none;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Available Balance:</strong> <span id="currentBalance">0</span> coins
+                        </div>
+
+                        <!-- From Address -->
+                        <div class="mb-3">
+                            {{ form.from_address.label_tag }}
+                            {{ form.from_address }}
+                            {% if form.from_address.errors %}
+                                <div class="text-danger">{{ form.from_address.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Private Key -->
+                        <div class="mb-3">
+                            {{ form.private_key.label_tag }}
+                            {{ form.private_key }}
+                            <small class="form-text text-muted">{{ form.private_key.help_text }}</small>
+                            {% if form.private_key.errors %}
+                                <div class="text-danger">{{ form.private_key.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- To Address -->
+                        <div class="mb-3">
+                            {{ form.to_address.label_tag }}
+                            {{ form.to_address }}
+                            {% if form.to_address.errors %}
+                                <div class="text-danger">{{ form.to_address.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                <i class="fas fa-lightbulb me-1"></i>
+                                Tip: You can copy an address from your <a href="{% url 'blockchain:wallet_list' %}">wallets page</a>
+                            </small>
+                        </div>
+
+                        <!-- Amount -->
+                        <div class="mb-3">
+                            {{ form.amount.label_tag }}
+                            <div class="input-group">
+                                {{ form.amount }}
+                                <span class="input-group-text">coins</span>
+                            </div>
+                            {% if form.amount.errors %}
+                                <div class="text-danger">{{ form.amount.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Form Errors -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <!-- Submit Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-signature me-2"></i>Create & Sign Transaction
+                            </button>
+                            <a href="{% url 'blockchain:home' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        You need to create a wallet first before you can send transactions.
+                    </div>
+                    <div class="d-grid">
+                        <a href="{% url 'blockchain:wallet_list' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-wallet me-2"></i>Create Wallet
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <i class="fas fa-info-circle me-2"></i>Transaction Information
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Transactions must be signed with your private key</li>
+                    <li>You can only send transactions from wallets you own</li>
+                    <li>Make sure you have enough balance to cover the transaction</li>
+                    <li>Transactions will be pending until a block is mined</li>
+                    <li>Never share your private key with anyone!</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateWalletInfo() {
+        const select = document.getElementById('walletSelect');
+        const selectedOption = select.options[select.selectedIndex];
+
+        if (selectedOption.value) {
+            // Update form fields
+            document.getElementById('id_from_address').value = selectedOption.value;
+            document.getElementById('id_private_key').value = selectedOption.dataset.private;
+
+            // Show balance
+            const balance = selectedOption.dataset.balance;
+            document.getElementById('currentBalance').textContent = parseFloat(balance).toFixed(2);
+            document.getElementById('balanceAlert').style.display = 'block';
+        } else {
+            // Clear fields
+            document.getElementById('id_from_address').value = '';
+            document.getElementById('id_private_key').value = '';
+            document.getElementById('balanceAlert').style.display = 'none';
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateWalletInfo();
+    });
+</script>
+{% endblock %}

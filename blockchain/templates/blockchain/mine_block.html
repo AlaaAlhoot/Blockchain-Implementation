@@ -1,0 +1,137 @@
+
+{% extends 'blockchain/base.html' %}
+
+{% block title %}Mine Block{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5 text-center mb-4">
+            <i class="fas fa-hammer text-warning"></i>
+            Mine New Block
+        </h1>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Pending Transactions Info -->
+        <div class="card mb-4">
+            <div class="card-header {% if pending_count > 0 %}bg-success text-white{% else %}bg-warning text-dark{% endif %}">
+                <i class="fas fa-clock me-2"></i>Pending Transactions
+            </div>
+            <div class="card-body text-center">
+                <h2 class="display-4 mb-0">{{ pending_count }}</h2>
+                <p class="text-muted mb-0">
+                    {% if pending_count > 0 %}
+                        Ready to be mined into a block
+                    {% else %}
+                        No pending transactions
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Mining Form - ALWAYS SHOW -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-edit me-2"></i>Mining Details
+            </div>
+            <div class="card-body">
+                <form method="post" id="miningForm">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="id_miner_address" class="form-label">
+                            <strong><i class="fas fa-wallet me-2"></i>Miner Address</strong>
+                        </label>
+                        <input type="text"
+                               name="miner_address"
+                               class="form-control"
+                               id="id_miner_address"
+                               placeholder="Enter your wallet address to receive mining reward"
+                               required>
+                        <small class="form-text text-muted">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            Tip: Copy your wallet address from the <a href="{% url 'blockchain:wallet_list' %}">Wallets page</a>
+                        </small>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-award me-2"></i>
+                        <strong>Mining Reward:</strong> You will receive 100 coins for mining this block!
+                    </div>
+
+                    {% if pending_count > 0 %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>{{ pending_count }} transaction(s)</strong> will be included in this block
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No transactions to include, but you can still mine to earn the reward!
+                        </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning btn-lg" id="mineButton">
+                            <i class="fas fa-hammer me-2"></i>Start Mining
+                        </button>
+                        <a href="{% url 'blockchain:home' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Back to Home
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Mining Progress (shown during mining) -->
+                <div id="miningProgress" style="display: none;" class="mt-4">
+                    <div class="text-center">
+                        <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Mining...</span>
+                        </div>
+                        <p class="mt-3">
+                            <strong>Mining in progress...</strong><br>
+                            <small class="text-muted">This may take a few seconds depending on difficulty</small>
+                        </p>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                             role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <i class="fas fa-info-circle me-2"></i>About Mining
+            </div>
+            <div class="card-body">
+                <h6><strong>What is Mining?</strong></h6>
+                <p>Mining is the process of validating and adding pending transactions to the blockchain. It involves solving a computationally difficult problem (Proof of Work).</p>
+
+                <h6 class="mt-3"><strong>How it works:</strong></h6>
+                <ul class="mb-0">
+                    <li>All pending transactions are collected into a new block</li>
+                    <li>The miner must find a valid "nonce" that makes the block hash start with a specific number of zeros</li>
+                    <li>This requires many computational attempts (that's why it's called "work")</li>
+                    <li>Once found, the block is added to the blockchain</li>
+                    <li>The miner receives a reward for their computational work</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('miningForm').addEventListener('submit', function(e) {
+        // Show mining progress
+        document.getElementById('mineButton').disabled = true;
+        document.getElementById('miningProgress').style.display = 'block';
+    });
+</script>
+{% endblock %}
